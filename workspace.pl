@@ -13,20 +13,16 @@ use JSON qw( decode_json  encode_json to_json from_json);
 use File::Slurp qw(read_file);
 my $home = $ENV{HOME};
 (my $date = `date +'%Y-%m-%d_%H.%M.%S'`) =~ s/\n//;
-my $help = "";
-my $string = "";
-my $number = "";
 use Getopt::Long;
+my $help = "";
 my $push = "";
 my $pull = "";
-my $patch		 = "";
+my $patch = "";
 my $clone = "";
 my $install = "";
 my $self = "";
 GetOptions (
-    "string=s" => \$string, 
     "help" => \$help, 
-    "number=f" => \$number, 
     "push" => \$push,
     "pull" => \$pull,
     "patch" => \$patch		,
@@ -43,22 +39,40 @@ my @a = qw{zenodo-lib
     zotero-cli
     zotzen-cli};
 
-if (!$self && !$push && !$pull && !$install && !$patch) {
+if ($help || (!$self && !$push && !$pull && !$install && !$patch)) {
 say "
 $0
 
---push
+--clone
 --pull
+--push
 --install
 --patch
 --self 
+
+
+--clone
+        CLone all zotero/zenodo repositories.
+--pull
+        Pull all zotero/zenodo repositories.
+--push
+        Pull, then push, all zotero/zenodo repositories.
+
+--install
+        Pull, then npm install
+--patch
+        Pull, push, npm install and npm publish:patch
+
+--self 
+        Pull/push this script.
+
 
 ";
 };
 
 
 if ($self) {
-    system "git add .; git commit -m \"Updating workspace tool\"; git push";
+    system "git pull; git add .; git commit -m \"Updating workspace tool\"; git push";
     exit;
 }
 
@@ -79,6 +93,7 @@ if ($clone) {
 $push = 1 if $patch;
 $pull = 1 if $push;
 $install = 1 if $patch;
+$pull = 1 if $install;
 
 #my $mydir = ".";
 #opendir(my $dh, $mydir) || die "Can't opendir $mydir: $!";
