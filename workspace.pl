@@ -43,7 +43,7 @@ my @a = qw{zenodo-lib
     zotero-cli
     zotzen-cli};
 
-if (!@ARGV) {
+if (!$self && !$push && !$pull && !$install && !$patch) {
 say "
 $0
 
@@ -51,6 +51,7 @@ $0
 --pull
 --install
 --patch
+--self 
 
 ";
 };
