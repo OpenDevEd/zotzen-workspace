@@ -20,6 +20,9 @@ use Getopt::Long;
 my $push = "";
 my $pull = "";
 my $patch		 = "";
+my $clone = "";
+my $install = "";
+my $self = "";
 GetOptions (
     "string=s" => \$string, 
     "help" => \$help, 
@@ -27,6 +30,9 @@ GetOptions (
     "push" => \$push,
     "pull" => \$pull,
     "patch" => \$patch		,
+    "clone" => \$clone,
+    "install" => \$install,
+    "self" => \$self,
     ) or die("Error in command line arguments\n");
 
 
@@ -37,15 +43,50 @@ my @a = qw{zenodo-lib
     zotero-cli
     zotzen-cli};
 
+if (!@ARGV) {
+say "
+$0
+
+--push
+--pull
+--install
+--patch
+
+";
+};
+
+
+if ($self) {
+    system "git add .; git commit -m \"Updating workspace tool\"; git push";
+    exit;
+}
+
+if ($clone) {
+    say "Cloning repositories.";
+    foreach (@a) {
+	if (!-e $_) {
+	    system("git clone git\@github.com:OpenDevEd/$_.git");
+	    # https://github.com/OpenDevEd/zotero-lib.git
+	} else {
+	    say "Repo $_ already exists.";
+	};
+    };
+    say "Done cloning repositories.";
+    exit;
+}
+
 $push = 1 if $patch;
 $pull = 1 if $push;
+$install = 1 if $patch;
 
-my $mydir = ".";
-opendir(my $dh, $mydir) || die "Can't opendir $mydir: $!";
-my @dirs = grep { !m/^\./ && -d "$mydir/$_" && -f "$mydir/$_/package.json"} readdir($dh);
-closedir $dh;
+#my $mydir = ".";
+#opendir(my $dh, $mydir) || die "Can't opendir $mydir: $!";
+#my @dirs = grep { !m/^\./ && -d "$mydir/$_" && -f "$mydir/$_/package.json"} readdir($dh);
+#closedir $dh;
+
 my %v;
 
+my @dirs;
 if (@ARGV) {
     @dirs = @ARGV;
 } else {
@@ -80,7 +121,7 @@ sub getdeps() {
     say "[Getting dependencies]";
     foreach my $dir (@a) {
 	#say "- $dir";
-	my $file = "$mydir/$dir/package.json";
+	my $file = "$dir/package.json";
 	my $f = read_file($file);
 	my $g = from_json($f);
 	$v{$g->{"name"}} = $g->{"version"};    
@@ -99,12 +140,14 @@ sub replace() {
     };
 };
 
-my $i = 0;
-foreach my $dir (@dirs) {
+
+
+$i = 0;
+if ($install) { foreach my $dir (@dirs) {
     %v = getdeps();
     $i++;
     say "\n\n*** $dir ($i) ***\n";
-    my $file = "$mydir/$dir/package.json";
+    my $file = "$dir/package.json";
     my $f = read_file($file);
     my $g = from_json($f);
     my $n = $g->{"name"};
@@ -133,6 +176,6 @@ foreach my $dir (@dirs) {
 	system("chdir $dir; git add .; git commit -m 'bumping patch'; git push");
 	system("chdir $dir; npm run publish:patch");
     }
-};
+};};
 
 exit();
