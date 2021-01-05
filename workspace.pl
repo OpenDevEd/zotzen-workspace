@@ -21,6 +21,9 @@ my $patch = "";
 my $clone = "";
 my $install = "";
 my $self = "";
+my $message = "";
+my $global = "";
+my $reglobal = "";
 GetOptions (
     "help" => \$help, 
     "push" => \$push,
@@ -29,8 +32,14 @@ GetOptions (
     "clone" => \$clone,
     "install" => \$install,
     "self" => \$self,
+    "message=s" => \$message,
+    "global" => \$global,
+    "reglobal" => \$reglobal,
     ) or die("Error in command line arguments\n");
 
+if ($message) {
+    $message = " " . $message
+}
 
 my @a = qw{zenodo-lib
     zotero-lib
@@ -39,7 +48,7 @@ my @a = qw{zenodo-lib
     zotero-cli
     zotzen-cli};
 
-if ($help || (!$self && !$push && !$pull && !$install && !$patch)) {
+if ($help || (!$self && !$push && !$pull && !$install && !$patch && !$global && !$reglobal)) {
 say "
 $0
 
@@ -62,6 +71,11 @@ $0
         Pull, then npm install
 --patch
         Pull, push, npm install and npm publish:patch
+--global
+        Install CLIs globally.
+--reglobal
+        Remove CLIs globally first, then reinstall
+
 
 --self 
         Pull/push this script.
@@ -117,7 +131,7 @@ if ($pull) { foreach my $file (@dirs) {
 	if (-d "$file/.git") {
 	    system("chdir $file; git fetch --all; git pull --all");
 	    if ($push) {
-		system("chdir $file; git add .; git commit -m 'Tidy up'; git push");
+		system("chdir $file; git add .; git commit -m 'zotzen-workspace (tidy up)$message'; git push");
 		#say "Has this repo moved?";
 		#my $x = <STDIN>;
 		#chomp($x);
@@ -186,12 +200,27 @@ if ($install) { foreach my $dir (@dirs) {
 	    };
 	};
     };
-    system("chdir $dir; npm install");
+    system("chdir $dir; npm install; npm run build");
     if ($patch) {
 	say "patch";
-	system("chdir $dir; git add .; git commit -m 'bumping patch'; git push");
+	system("chdir $dir; git add .; git commit -m 'zotzen-workspace (bumping patch)$message'; git push");
 	system("chdir $dir; npm run publish:patch");
     }
 };};
 
+my $login = (getpwuid $>);
+if ($login ne 'root') {
+    say "\n\nYou may have to enter the super user password to install globally.\n";
+};
+
+if ($global || $reglobal) { foreach my $dir (@dirs) {
+    if ($dir =~ m/cli$/) {
+	if ($reglobal) {
+	    say "\nUninstalling CLI: $dir";
+	    system("sudo npm uninstall -g $dir");
+	};
+	say "\nInstalling CLI: $dir";
+	system("sudo npm install -g $dir");
+    };
+};};
 exit();
