@@ -208,19 +208,21 @@ if ($install) { foreach my $dir (@dirs) {
     }
 };};
 
-my $login = (getpwuid $>);
-if ($login ne 'root') {
-    say "\n\nYou may have to enter the super user password to install globally.\n";
-};
 
-if ($global || $reglobal) { foreach my $dir (@dirs) {
-    if ($dir =~ m/cli$/) {
-	if ($reglobal) {
-	    say "\nUninstalling CLI: $dir";
-	    system("sudo npm uninstall -g $dir");
+if ($global || $reglobal) {
+    my $login = (getpwuid $>);
+    if ($login ne 'root') {
+	say "\n\nYou may have to enter the super user password to install globally.\n";
+    };    
+    foreach my $dir (@dirs) {
+	if ($dir =~ m/cli$/) {
+	    if ($reglobal) {
+		say "\nUninstalling CLI: $dir";
+		system("sudo npm uninstall -g $dir");
+	    };
+	    say "\nInstalling CLI: $dir";
+	    system("sudo npm install -g $dir");
 	};
-	say "\nInstalling CLI: $dir";
-	system("sudo npm install -g $dir");
     };
-};};
+};
 exit();
