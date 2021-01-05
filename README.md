@@ -16,8 +16,13 @@ cd zotzen-workspace
 ./workspace.pl --help
 ```
 
-You need to have the File::Slurp library. On Ubuntu:
+# Requirements
+You need `perl`, version 5.18.2. You need to have the `File::Slurp` library. On Ubuntu:
 ```
 sudo apt install libfile-slurp-perl
 ```
-or use `cpan`.
+or use `cpan`
+```
+cpan install File::Slurp
+```
+
