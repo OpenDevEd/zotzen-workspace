@@ -24,6 +24,7 @@ my $self = "";
 my $message = "";
 my $global = "";
 my $reglobal = "";
+my $autoup = "";
 GetOptions (
     "help" => \$help, 
     "push" => \$push,
@@ -35,6 +36,7 @@ GetOptions (
     "message=s" => \$message,
     "global" => \$global,
     "reglobal" => \$reglobal,
+    "autoup" => \$autoup,
     ) or die("Error in command line arguments\n");
 
 if ($message) {
@@ -75,7 +77,6 @@ $0
         Install CLIs globally.
 --reglobal
         Remove CLIs globally first, then reinstall
-
 
 --self 
         Pull/push this script.
@@ -190,9 +191,13 @@ if ($install) { foreach my $dir (@dirs) {
 	    say "\t$_\t$d{$_}\t(available: $v{$_})";
 	    $d{$_} =~ s/\^//;
 	    if ($d{$_} ne $v{$_}) {
-		say "Upgrade? y/n";
-		my $x = <STDIN>;
-		chomp($x);
+		my $x = "y";
+		if (!$autoup) {
+		    say "(You can enable autoupdate with --autoup.)";
+		    say "Upgrade? y/n";
+		    $x = <STDIN>;
+		    chomp($x);
+		}
 		if ($x eq "y") {
 		    &replace($file,$_,$d{$_},$v{$_});
 		    # system("emacs","-nw","$mydir/$dir/package.json");
